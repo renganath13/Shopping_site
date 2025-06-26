@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://renganath13.github.io/Shopping_site/sitemap.xml
