@@ -1,0 +1,2357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopEase - Online Shopping</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4f46e5',secondary:'#f97316'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .hero-slider {
+            position: relative;
+            overflow: hidden;
+            height: 500px;
+        }
+        .slider-container {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+        }
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .slide-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 0 5rem;
+            background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%);
+            color: white;
+        }
+        .slider-nav {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.5);
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .slider-dot.active {
+            background-color: white;
+        }
+        .slider-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            z-index: 10;
+        }
+        .slider-arrow:hover {
+            background-color: rgba(255,255,255,0.5);
+        }
+        .slider-arrow.prev {
+            left: 20px;
+        }
+        .slider-arrow.next {
+            right: 20px;
+        }
+        .category-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .category-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .product-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .quick-view {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .product-card:hover .quick-view {
+            opacity: 1;
+        }
+        .product-image-container {
+            overflow: hidden;
+        }
+        .product-image {
+            transition: transform 0.5s;
+        }
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+        .cart-counter {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #f97316;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .custom-checkbox {
+            position: relative;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }
+        .custom-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 20px;
+            height: 20px;
+            background-color: #fff;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .custom-checkbox input:checked ~ .checkmark {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        .custom-checkbox input:checked ~ .checkmark:after {
+            display: block;
+        }
+        .price-range {
+            /* -webkit-appearance: none; */
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            outline: none;
+        }
+        .price-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .price-range::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #4f46e5;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .switch-slider {
+            background-color: #4f46e5;
+        }
+        input:checked + .switch-slider:before {
+            transform: translateX(20px);
+        }
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9fafb;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .quantity-input {
+            width: 40px;
+            height: 32px;
+            border: none;
+            text-align: center;
+            font-size: 14px;
+            /* -moz-appearance: textfield; */
+        }
+        .quantity-input::-webkit-outer-spin-button,
+        .quantity-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            position: relative;
+            animation: modalFadeIn 0.3s;
+        }
+        @keyframes modalFadeIn {
+            from {opacity: 0; transform: translateY(-20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .countdown-container {
+            display: flex;
+            gap: 10px;
+        }
+        .countdown-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .countdown-value {
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 8px;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .countdown-label {
+            font-size: 12px;
+            margin-top: 5px;
+            color: #6b7280;
+        }
+        .stock-progress {
+            width: 100%;
+            height: 8px;
+            background-color: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .stock-progress-bar {
+            height: 100%;
+            background-color: #4f46e5;
+            border-radius: 4px;
+        }
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background-color: #4f46e5;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+        .back-to-top.show {
+            opacity: 1;
+        }
+        .wishlist-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 36px;
+            height: 36px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .wishlist-btn i {
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+        .wishlist-btn.active i {
+            color: #ef4444;
+        }
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom-color: #4f46e5;
+            color: #4f46e5;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .add-to-cart-animation {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            background-color: #4f46e5;
+            border-radius: 50%;
+            z-index: 1000;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo -->
+                <a href="#" class="text-3xl font-['Pacifico'] text-primary">logo</a>
+                
+                <!-- Search Bar -->
+                <div class="relative w-1/3">
+                    <input type="text" placeholder="Search for products..." class="w-full pl-10 pr-4 py-2 rounded-button border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+                        <i class="ri-search-line"></i>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-primary font-medium">Home</a>
+                    <a href="#" class="text-gray-700 hover:text-primary font-medium">Categories</a>
+                    <a href="#" class="text-gray-700 hover:text-primary font-medium">Deals</a>
+                    <a href="#" class="text-gray-700 hover:text-primary font-medium">Contact</a>
+                </nav>
+                
+                <!-- User Actions -->
+                <div class="flex items-center space-x-6">
+                    <div class="relative w-10 h-10 flex items-center justify-center cursor-pointer">
+                        <i class="ri-user-line text-xl text-gray-700"></i>
+                    </div>
+                    <div class="relative w-10 h-10 flex items-center justify-center cursor-pointer" id="cart-icon">
+                        <i class="ri-shopping-cart-line text-xl text-gray-700"></i>
+                        <span class="cart-counter" id="cart-counter">0</span>
+                    </div>
+                    <button class="bg-primary text-white px-4 py-2 rounded-button font-medium whitespace-nowrap">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-20">
+        <!-- Hero Slider -->
+        <section class="hero-slider">
+            <div class="slider-container">
+                <div class="slide" style="background-image: url('https://readdy.ai/api/search-image?query=modern%20e-commerce%20fashion%20website%20hero%20image%20with%20a%20stylish%20model%20wearing%20trendy%20clothes%20against%20a%20clean%2C%20minimalist%20background%20with%20soft%20lighting%20and%20subtle%20shadows%2C%20professional%20product%20photography&width=1280&height=500&seq=1&orientation=landscape')">
+                    <div class="slide-content">
+                        <h1 class="text-5xl font-bold mb-4">Summer Collection 2025</h1>
+                        <p class="text-xl mb-6">Discover the latest trends with up to 50% off</p>
+                        <div class="flex space-x-4">
+                            <button class="bg-primary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap">Shop Now</button>
+                            <button class="bg-white text-gray-800 px-6 py-3 rounded-button font-medium whitespace-nowrap">Learn More</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://readdy.ai/api/search-image?query=modern%20e-commerce%20electronics%20website%20hero%20image%20with%20the%20latest%20smartphones%20and%20gadgets%20displayed%20elegantly%20against%20a%20tech-inspired%20background%20with%20blue%20lighting%20and%20digital%20elements%2C%20professional%20product%20photography&width=1280&height=500&seq=2&orientation=landscape')">
+                    <div class="slide-content">
+                        <h1 class="text-5xl font-bold mb-4">Tech Gadgets Sale</h1>
+                        <p class="text-xl mb-6">Latest electronics with free shipping worldwide</p>
+                        <div class="flex space-x-4">
+                            <button class="bg-primary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap">Shop Gadgets</button>
+                            <button class="bg-white text-gray-800 px-6 py-3 rounded-button font-medium whitespace-nowrap">View Deals</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="slide" style="background-image: url('https://readdy.ai/api/search-image?query=modern%20e-commerce%20home%20decor%20website%20hero%20image%20with%20beautifully%20arranged%20furniture%20and%20home%20accessories%20in%20a%20stylish%20living%20room%20setting%20with%20natural%20light%20streaming%20through%20large%20windows%2C%20professional%20interior%20photography&width=1280&height=500&seq=3&orientation=landscape')">
+                    <div class="slide-content">
+                        <h1 class="text-5xl font-bold mb-4">Home & Living</h1>
+                        <p class="text-xl mb-6">Transform your space with our exclusive collection</p>
+                        <div class="flex space-x-4">
+                            <button class="bg-primary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap">Explore Now</button>
+                            <button class="bg-white text-gray-800 px-6 py-3 rounded-button font-medium whitespace-nowrap">See Catalog</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="slider-arrow prev">
+                <i class="ri-arrow-left-s-line text-2xl text-white"></i>
+            </div>
+            <div class="slider-arrow next">
+                <i class="ri-arrow-right-s-line text-2xl text-white"></i>
+            </div>
+            <div class="slider-nav">
+                <div class="slider-dot active"></div>
+                <div class="slider-dot"></div>
+                <div class="slider-dot"></div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="py-10 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <i class="ri-truck-line text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Free Shipping</h3>
+                            <p class="text-gray-500 text-sm">On orders over $50</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <i class="ri-refresh-line text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Easy Returns</h3>
+                            <p class="text-gray-500 text-sm">30 day return policy</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <i class="ri-secure-payment-line text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">Secure Payment</h3>
+                            <p class="text-gray-500 text-sm">100% secure checkout</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <i class="ri-customer-service-2-line text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold">24/7 Support</h3>
+                            <p class="text-gray-500 text-sm">Dedicated support</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories -->
+        <section class="py-16">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-8 text-center">Shop by Category</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="category-card bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://readdy.ai/api/search-image?query=modern%20fashion%20clothing%20items%20neatly%20arranged%20on%20a%20clean%20white%20background%2C%20featuring%20trendy%20outfits%2C%20shirts%2C%20dresses%2C%20and%20accessories%20with%20soft%20shadows%20and%20professional%20lighting%2C%20high-quality%20product%20photography&width=300&height=200&seq=4&orientation=landscape" alt="Fashion" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="font-semibold text-lg">Fashion</h3>
+                            <p class="text-gray-500 text-sm mb-3">1,200+ Products</p>
+                            <a href="#" class="text-primary font-medium hover:underline">Shop Now</a>
+                        </div>
+                    </div>
+                    <div class="category-card bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://readdy.ai/api/search-image?query=modern%20electronics%20and%20gadgets%20arranged%20on%20a%20clean%20white%20background%2C%20featuring%20smartphones%2C%20laptops%2C%20headphones%2C%20and%20smart%20watches%20with%20soft%20shadows%20and%20professional%20lighting%2C%20high-quality%20product%20photography&width=300&height=200&seq=5&orientation=landscape" alt="Electronics" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="font-semibold text-lg">Electronics</h3>
+                            <p class="text-gray-500 text-sm mb-3">850+ Products</p>
+                            <a href="#" class="text-primary font-medium hover:underline">Shop Now</a>
+                        </div>
+                    </div>
+                    <div class="category-card bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://readdy.ai/api/search-image?query=modern%20home%20decor%20and%20furniture%20items%20arranged%20on%20a%20clean%20white%20background%2C%20featuring%20stylish%20chairs%2C%20lamps%2C%20vases%2C%20and%20decorative%20objects%20with%20soft%20shadows%20and%20professional%20lighting%2C%20high-quality%20product%20photography&width=300&height=200&seq=6&orientation=landscape" alt="Home & Living" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="font-semibold text-lg">Home & Living</h3>
+                            <p class="text-gray-500 text-sm mb-3">950+ Products</p>
+                            <a href="#" class="text-primary font-medium hover:underline">Shop Now</a>
+                        </div>
+                    </div>
+                    <div class="category-card bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="h-48 overflow-hidden">
+                            <img src="https://readdy.ai/api/search-image?query=modern%20beauty%20and%20cosmetic%20products%20arranged%20on%20a%20clean%20white%20background%2C%20featuring%20skincare%20bottles%2C%20makeup%20items%2C%20perfumes%2C%20and%20beauty%20tools%20with%20soft%20shadows%20and%20professional%20lighting%2C%20high-quality%20product%20photography&width=300&height=200&seq=7&orientation=landscape" alt="Beauty" class="w-full h-full object-cover object-top">
+                        </div>
+                        <div class="p-4 text-center">
+                            <h3 class="font-semibold text-lg">Beauty</h3>
+                            <p class="text-gray-500 text-sm mb-3">750+ Products</p>
+                            <a href="#" class="text-primary font-medium hover:underline">Shop Now</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Products -->
+        <section class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold">Featured Products</h2>
+                    <div class="flex space-x-2">
+                        <div class="tab-container inline-flex rounded-full bg-gray-100 p-1">
+                            <button class="tab active px-4 py-1 rounded-full whitespace-nowrap" data-tab="all">All</button>
+                            <button class="tab px-4 py-1 rounded-full whitespace-nowrap" data-tab="new">New Arrivals</button>
+                            <button class="tab px-4 py-1 rounded-full whitespace-nowrap" data-tab="best">Best Sellers</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-8 flex justify-between items-center">
+                    <div class="flex items-center space-x-4">
+                        <button class="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-button whitespace-nowrap">
+                            <i class="ri-filter-3-line"></i>
+                            <span>Filter</span>
+                        </button>
+                        <div class="relative">
+                            <button class="flex items-center space-x-2 px-4 py-2 border border-gray-200 rounded-button whitespace-nowrap" id="sort-button">
+                                <span>Sort By: Featured</span>
+                                <i class="ri-arrow-down-s-line"></i>
+                            </button>
+                            <div class="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg z-20 hidden" id="sort-dropdown">
+                                <div class="py-1">
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Featured</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Price: Low to High</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Price: High to Low</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Customer Rating</a>
+                                    <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Newest First</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-gray-500 text-sm">View:</span>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-button border border-gray-200 bg-primary text-white">
+                            <i class="ri-layout-grid-line"></i>
+                        </button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-button border border-gray-200 text-gray-500">
+                            <i class="ri-list-check"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content active" id="all-content">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- Product 1 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="1">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20premium%20white%20wireless%20noise-cancelling%20headphones%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=8&orientation=squarish" alt="Wireless Headphones" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="1">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-half-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.5 (128)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Premium Wireless Headphones</h3>
+                                <p class="text-gray-500 text-sm mb-3">Noise Cancelling</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$129.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$199.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="1">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 2 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="2">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20sleek%20modern%20smartwatch%20with%20black%20band%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=9&orientation=squarish" alt="Smartwatch" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="2">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-line"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.0 (95)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Smart Watch Series 5</h3>
+                                <p class="text-gray-500 text-sm mb-3">Health & Fitness Tracker</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$249.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$299.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="2">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 3 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="3">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20leather%20crossbody%20bag%20in%20brown%20color%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=10&orientation=squarish" alt="Leather Bag" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="3">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">5.0 (42)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Genuine Leather Crossbody Bag</h3>
+                                <p class="text-gray-500 text-sm mb-3">Handcrafted</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$79.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$99.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="3">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 4 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="4">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20minimalist%20white%20ceramic%20table%20lamp%20with%20wooden%20base%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=11&orientation=squarish" alt="Table Lamp" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="4">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-half-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.5 (78)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Minimalist Table Lamp</h3>
+                                <p class="text-gray-500 text-sm mb-3">Ceramic & Wood</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$59.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$79.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="4">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 5 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="5">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20pair%20of%20white%20and%20blue%20athletic%20sneakers%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=12&orientation=squarish" alt="Sneakers" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="5">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-line"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.0 (112)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Athletic Running Shoes</h3>
+                                <p class="text-gray-500 text-sm mb-3">Lightweight & Breathable</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$89.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$119.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="5">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 6 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="6">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20sleek%20stainless%20steel%20water%20bottle%20in%20matte%20black%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=13&orientation=squarish" alt="Water Bottle" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="6">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-half-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.7 (89)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Insulated Water Bottle</h3>
+                                <p class="text-gray-500 text-sm mb-3">Stainless Steel</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$24.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$34.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="6">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 7 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="7">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20denim%20jacket%20in%20light%20blue%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=14&orientation=squarish" alt="Denim Jacket" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="7">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-line"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.2 (65)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Classic Denim Jacket</h3>
+                                <p class="text-gray-500 text-sm mb-3">Vintage Wash</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$69.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$89.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="7">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Product 8 -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="8">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20set%20of%20scented%20candles%20in%20glass%20jars%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=15&orientation=squarish" alt="Scented Candles" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="8">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">5.0 (37)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Luxury Scented Candles</h3>
+                                <p class="text-gray-500 text-sm mb-3">Set of 3</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$39.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$49.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="8">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content hidden" id="new-content">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- New Arrival Products would go here -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="9">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20modern%20wireless%20earbuds%20with%20charging%20case%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=16&orientation=squarish" alt="Wireless Earbuds" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="9">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-half-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.6 (52)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Wireless Earbuds Pro</h3>
+                                <p class="text-gray-500 text-sm mb-3">Active Noise Cancellation</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$149.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$179.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="9">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- More New Arrival Products -->
+                    </div>
+                </div>
+                
+                <div class="tab-content hidden" id="best-content">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <!-- Best Seller Products would go here -->
+                        <div class="product-card bg-white rounded-lg shadow-sm overflow-hidden relative">
+                            <div class="wishlist-btn" data-product-id="10">
+                                <i class="ri-heart-line"></i>
+                            </div>
+                            <div class="product-image-container h-64">
+                                <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20leather%20wallet%20in%20brown%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=17&orientation=squarish" alt="Leather Wallet" class="product-image w-full h-full object-cover object-top">
+                            </div>
+                            <div class="quick-view absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center">
+                                <button class="bg-white text-gray-800 px-4 py-2 rounded-button font-medium whitespace-nowrap" data-product-id="10">Quick View</button>
+                            </div>
+                            <div class="p-4">
+                                <div class="flex items-center mb-2">
+                                    <div class="flex text-yellow-400">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                    <span class="text-gray-500 text-sm ml-2">4.9 (215)</span>
+                                </div>
+                                <h3 class="font-semibold mb-1">Premium Leather Wallet</h3>
+                                <p class="text-gray-500 text-sm mb-3">RFID Blocking</p>
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-lg font-bold">$49.99</span>
+                                        <span class="text-gray-400 line-through ml-2">$69.99</span>
+                                    </div>
+                                    <button class="add-to-cart-btn w-10 h-10 flex items-center justify-center bg-primary text-white rounded-full" data-product-id="10">
+                                        <i class="ri-shopping-cart-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- More Best Seller Products -->
+                    </div>
+                </div>
+                
+                <div class="flex justify-center mt-10">
+                    <button class="bg-white border border-gray-200 text-gray-800 px-6 py-3 rounded-button font-medium whitespace-nowrap hover:bg-gray-50">Load More Products</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Special Offers -->
+        <section class="py-16 bg-gradient-to-r from-indigo-50 to-purple-50">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-8 text-center">Flash Sale</h2>
+                
+                <div class="mb-8 flex justify-center">
+                    <div class="countdown-container">
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="days">02</div>
+                            <div class="countdown-label">Days</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="hours">08</div>
+                            <div class="countdown-label">Hours</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="minutes">45</div>
+                            <div class="countdown-label">Minutes</div>
+                        </div>
+                        <div class="countdown-item">
+                            <div class="countdown-value" id="seconds">30</div>
+                            <div class="countdown-label">Seconds</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Flash Sale Product 1 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20premium%20smartphone%20in%20black%20color%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=400&height=300&seq=18&orientation=landscape" alt="Smartphone" class="w-full h-64 object-cover object-top">
+                            <div class="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">-30%</div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg mb-2">Premium Smartphone X5</h3>
+                            <div class="flex items-center mb-3">
+                                <div class="flex text-yellow-400">
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-half-fill"></i>
+                                </div>
+                                <span class="text-gray-500 text-sm ml-2">4.5 (186)</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl font-bold text-red-500">$699.99</span>
+                                <span class="text-gray-400 line-through ml-3">$999.99</span>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-gray-500">Available: 18</span>
+                                    <span class="text-sm text-gray-500">Sold: 42</span>
+                                </div>
+                                <div class="stock-progress">
+                                    <div class="stock-progress-bar" style="width: 30%;"></div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap">Add to Cart</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Flash Sale Product 2 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20premium%20coffee%20maker%20machine%20in%20silver%20color%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=400&height=300&seq=19&orientation=landscape" alt="Coffee Maker" class="w-full h-64 object-cover object-top">
+                            <div class="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">-40%</div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg mb-2">Automatic Coffee Maker</h3>
+                            <div class="flex items-center mb-3">
+                                <div class="flex text-yellow-400">
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-line"></i>
+                                </div>
+                                <span class="text-gray-500 text-sm ml-2">4.0 (124)</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl font-bold text-red-500">$119.99</span>
+                                <span class="text-gray-400 line-through ml-3">$199.99</span>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-gray-500">Available: 24</span>
+                                    <span class="text-sm text-gray-500">Sold: 36</span>
+                                </div>
+                                <div class="stock-progress">
+                                    <div class="stock-progress-bar" style="width: 40%;"></div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap">Add to Cart</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Flash Sale Product 3 -->
+                    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                        <div class="relative">
+                            <img src="https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20premium%20wireless%20bluetooth%20speaker%20in%20black%20color%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=400&height=300&seq=20&orientation=landscape" alt="Bluetooth Speaker" class="w-full h-64 object-cover object-top">
+                            <div class="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">-25%</div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="font-semibold text-lg mb-2">Portable Bluetooth Speaker</h3>
+                            <div class="flex items-center mb-3">
+                                <div class="flex text-yellow-400">
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-fill"></i>
+                                    <i class="ri-star-half-fill"></i>
+                                </div>
+                                <span class="text-gray-500 text-sm ml-2">4.7 (93)</span>
+                            </div>
+                            <div class="flex items-center mb-4">
+                                <span class="text-2xl font-bold text-red-500">$74.99</span>
+                                <span class="text-gray-400 line-through ml-3">$99.99</span>
+                            </div>
+                            <div class="mb-4">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-gray-500">Available: 12</span>
+                                    <span class="text-sm text-gray-500">Sold: 58</span>
+                                </div>
+                                <div class="stock-progress">
+                                    <div class="stock-progress-bar" style="width: 17%;"></div>
+                                </div>
+                            </div>
+                            <button class="w-full bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center mt-10">
+                    <button class="bg-white border border-gray-200 text-gray-800 px-6 py-3 rounded-button font-medium whitespace-nowrap hover:bg-gray-50">View All Deals</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials -->
+        <section class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-12 text-center">What Our Customers Say</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Testimonial 1 -->
+                    <div class="bg-gray-50 rounded-lg p-6 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white">
+                            <i class="ri-double-quotes-l text-xl"></i>
+                        </div>
+                        <div class="pt-6">
+                            <p class="text-gray-600 mb-6">"I've been shopping here for years and I'm always impressed with the quality of products and the excellent customer service. The shipping is fast and the return process is hassle-free."</p>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                                    <img src="https://readdy.ai/api/search-image?query=professional%20headshot%20portrait%20of%20a%20smiling%20woman%20with%20brown%20hair%20in%20her%2030s%20against%20a%20neutral%20background%2C%20business%20casual%20attire%2C%20friendly%20expression&width=100&height=100&seq=21&orientation=squarish" alt="Customer" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Rebecca Thompson</h4>
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Testimonial 2 -->
+                    <div class="bg-gray-50 rounded-lg p-6 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white">
+                            <i class="ri-double-quotes-l text-xl"></i>
+                        </div>
+                        <div class="pt-6">
+                            <p class="text-gray-600 mb-6">"The product selection is amazing and the prices are very competitive. I love the user-friendly website and how easy it is to find exactly what I'm looking for. Definitely my go-to online shop!"</p>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                                    <img src="https://readdy.ai/api/search-image?query=professional%20headshot%20portrait%20of%20a%20smiling%20man%20with%20short%20dark%20hair%20in%20his%2040s%20against%20a%20neutral%20background%2C%20business%20casual%20attire%2C%20friendly%20expression&width=100&height=100&seq=22&orientation=squarish" alt="Customer" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Michael Rodriguez</h4>
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-half-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Testimonial 3 -->
+                    <div class="bg-gray-50 rounded-lg p-6 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white">
+                            <i class="ri-double-quotes-l text-xl"></i>
+                        </div>
+                        <div class="pt-6">
+                            <p class="text-gray-600 mb-6">"I was skeptical about online shopping until I found this site. The products are exactly as described and the delivery is always on time. Their customer support team is also very responsive and helpful."</p>
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                                    <img src="https://readdy.ai/api/search-image?query=professional%20headshot%20portrait%20of%20a%20smiling%20woman%20with%20blonde%20hair%20in%20her%2020s%20against%20a%20neutral%20background%2C%20business%20casual%20attire%2C%20friendly%20expression&width=100&height=100&seq=23&orientation=squarish" alt="Customer" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold">Jennifer Wilson</h4>
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                        <i class="ri-star-fill"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Newsletter -->
+        <section class="py-16 bg-gradient-to-r from-primary to-indigo-700 text-white">
+            <div class="container mx-auto px-4">
+                <div class="max-w-3xl mx-auto text-center">
+                    <h2 class="text-3xl font-bold mb-4">Subscribe to Our Newsletter</h2>
+                    <p class="mb-8">Stay updated with our latest offers, product launches, and exclusive deals.</p>
+                    <form id="newsletter-form" class="flex flex-col sm:flex-row gap-4">
+                        <input type="email" placeholder="Your email address" class="flex-1 px-4 py-3 rounded-button border-none text-gray-800 focus:outline-none focus:ring-2 focus:ring-yellow-400" required>
+                        <button type="submit" class="bg-secondary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap">Subscribe</button>
+                    </form>
+                    <div id="newsletter-message" class="mt-4 hidden"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Brands -->
+        <section class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold mb-12 text-center">Our Trusted Brands</h2>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-8">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-apple-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Apple</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-samsung-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Samsung</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-nike-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Nike</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-sony-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Sony</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-microsoft-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Microsoft</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="w-16 h-16 flex items-center justify-center text-gray-400 mb-2">
+                            <i class="ri-amazon-fill text-4xl"></i>
+                        </div>
+                        <span class="text-gray-500 text-sm">Amazon</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-16 pb-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">About Us</h3>
+                    <p class="text-gray-400 mb-4">We're dedicated to providing you with the best shopping experience with quality products and exceptional service.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700">
+                                <i class="ri-facebook-fill"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700">
+                                <i class="ri-twitter-x-fill"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700">
+                                <i class="ri-instagram-fill"></i>
+                            </div>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white">
+                            <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-700">
+                                <i class="ri-pinterest-fill"></i>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Home</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Shop</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Categories</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Flash Sale</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">New Arrivals</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Best Sellers</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Customer Service</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">FAQs</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Shipping Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Returns & Exchanges</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Contact Info</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="w-5 h-5 flex items-center justify-center text-gray-400 mr-3 mt-1">
+                                <i class="ri-map-pin-line"></i>
+                            </div>
+                            <span class="text-gray-400">1234 Market Street, Suite 900, San Francisco, CA 94103</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-5 h-5 flex items-center justify-center text-gray-400 mr-3 mt-1">
+                                <i class="ri-phone-line"></i>
+                            </div>
+                            <span class="text-gray-400">+1 (415) 123-4567</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-5 h-5 flex items-center justify-center text-gray-400 mr-3 mt-1">
+                                <i class="ri-mail-line"></i>
+                            </div>
+                            <span class="text-gray-400">support@shopease.com</span>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="w-5 h-5 flex items-center justify-center text-gray-400 mr-3 mt-1">
+                                <i class="ri-time-line"></i>
+                            </div>
+                            <span class="text-gray-400">Monday - Friday: 9am - 6pm<br>Saturday - Sunday: 10am - 4pm</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 mb-4 md:mb-0">&copy; 2025 ShopEase. All rights reserved.</p>
+                    <div class="flex items-center space-x-4">
+                        <div class="w-10 h-6 flex items-center justify-center">
+                            <i class="ri-visa-fill text-2xl text-gray-300"></i>
+                        </div>
+                        <div class="w-10 h-6 flex items-center justify-center">
+                            <i class="ri-mastercard-fill text-2xl text-gray-300"></i>
+                        </div>
+                        <div class="w-10 h-6 flex items-center justify-center">
+                            <i class="ri-paypal-fill text-2xl text-gray-300"></i>
+                        </div>
+                        <div class="w-10 h-6 flex items-center justify-center">
+                            <i class="ri-apple-fill text-2xl text-gray-300"></i>
+                        </div>
+                        <div class="w-10 h-6 flex items-center justify-center">
+                            <i class="ri-google-fill text-2xl text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Quick View Modal -->
+    <div class="modal" id="quick-view-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="product-image-container">
+                    <img id="modal-product-image" src="" alt="Product" class="w-full h-auto rounded-lg">
+                </div>
+                <div>
+                    <h2 id="modal-product-title" class="text-2xl font-bold mb-2"></h2>
+                    <div class="flex items-center mb-4">
+                        <div class="flex text-yellow-400">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-half-fill"></i>
+                        </div>
+                        <span id="modal-product-rating" class="text-gray-500 text-sm ml-2"></span>
+                    </div>
+                    <div class="mb-4">
+                        <span id="modal-product-price" class="text-2xl font-bold text-primary"></span>
+                        <span id="modal-product-old-price" class="text-gray-400 line-through ml-2"></span>
+                    </div>
+                    <p id="modal-product-description" class="text-gray-600 mb-6"></p>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-semibold mb-2">Color</h3>
+                        <div class="flex space-x-2">
+                            <div class="w-8 h-8 rounded-full bg-black border-2 border-gray-300 cursor-pointer"></div>
+                            <div class="w-8 h-8 rounded-full bg-blue-500 cursor-pointer"></div>
+                            <div class="w-8 h-8 rounded-full bg-red-500 cursor-pointer"></div>
+                            <div class="w-8 h-8 rounded-full bg-gray-200 cursor-pointer"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-semibold mb-2">Size</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <button class="px-4 py-2 border border-gray-300 rounded-md hover:border-primary">S</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-md hover:border-primary">M</button>
+                            <button class="px-4 py-2 border border-primary bg-primary/10 rounded-md">L</button>
+                            <button class="px-4 py-2 border border-gray-300 rounded-md hover:border-primary">XL</button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="font-semibold mb-2">Quantity</h3>
+                        <div class="quantity-selector inline-flex">
+                            <button class="quantity-btn minus">-</button>
+                            <input type="number" class="quantity-input" value="1" min="1" max="10">
+                            <button class="quantity-btn plus">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button class="flex-1 bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap">Add to Cart</button>
+                        <button class="w-12 h-12 flex items-center justify-center border border-gray-300 rounded-full">
+                            <i class="ri-heart-line text-gray-500"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="flex items-center space-x-6">
+                            <div class="flex items-center">
+                                <div class="w-5 h-5 flex items-center justify-center text-primary mr-2">
+                                    <i class="ri-truck-line"></i>
+                                </div>
+                                <span class="text-sm text-gray-600">Free shipping</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-5 h-5 flex items-center justify-center text-primary mr-2">
+                                    <i class="ri-refresh-line"></i>
+                                </div>
+                                <span class="text-sm text-gray-600">Free returns</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Sidebar -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" id="filter-sidebar-backdrop"></div>
+    <div class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out" id="filter-sidebar">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Filters</h3>
+                <button id="close-filter" class="text-gray-500 hover:text-gray-700">
+                    <i class="ri-close-line text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-3">Categories</h4>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" checked>
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>All Categories</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Electronics</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Fashion</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Home & Living</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Beauty</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-3">Price Range</h4>
+                <input type="range" min="0" max="1000" value="500" class="price-range mb-3" id="price-range">
+                <div class="flex justify-between">
+                    <span id="min-price">$0</span>
+                    <span id="max-price">$500</span>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-3">Brand</h4>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Apple</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Samsung</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Sony</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Nike</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <span>Adidas</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-3">Rating</h4>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="flex text-yellow-400 ml-2">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                        <span class="ml-2">& Up</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="flex text-yellow-400 ml-2">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-line"></i>
+                        </div>
+                        <span class="ml-2">& Up</span>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="custom-checkbox">
+                            <input type="checkbox">
+                            <span class="checkmark"></span>
+                        </label>
+                        <div class="flex text-yellow-400 ml-2">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-line"></i>
+                            <i class="ri-star-line"></i>
+                        </div>
+                        <span class="ml-2">& Up</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h4 class="font-semibold mb-3">Availability</h4>
+                <div class="flex items-center">
+                    <span class="mr-3">In Stock Only</span>
+                    <label class="custom-switch">
+                        <input type="checkbox">
+                        <span class="switch-slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button class="flex-1 bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap">Apply Filters</button>
+                <button class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-button font-medium whitespace-nowrap">Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Sidebar -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" id="cart-sidebar-backdrop"></div>
+    <div class="fixed top-0 right-0 bottom-0 w-96 bg-white z-50 transform translate-x-full transition-transform duration-300 ease-in-out" id="cart-sidebar">
+        <div class="flex flex-col h-full">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold">Your Cart</h3>
+                    <button id="close-cart" class="text-gray-500 hover:text-gray-700">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+                <p class="text-gray-500 mt-2"><span id="cart-count">0</span> items in your cart</p>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-6" id="cart-items">
+                <!-- Empty cart message -->
+                <div id="empty-cart-message" class="flex flex-col items-center justify-center h-full">
+                    <div class="w-24 h-24 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 mb-4">
+                        <i class="ri-shopping-cart-line text-4xl"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold mb-2">Your cart is empty</h4>
+                    <p class="text-gray-500 text-center mb-6">Looks like you haven't added any products to your cart yet.</p>
+                    <button id="start-shopping" class="bg-primary text-white px-6 py-3 rounded-button font-medium whitespace-nowrap">Start Shopping</button>
+                </div>
+                
+                <!-- Cart items will be dynamically added here -->
+            </div>
+            
+            <div class="p-6 border-t border-gray-200">
+                <div class="mb-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Subtotal</span>
+                        <span id="cart-subtotal" class="font-semibold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between mb-2">
+                        <span class="text-gray-600">Shipping</span>
+                        <span id="cart-shipping" class="font-semibold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Tax</span>
+                        <span id="cart-tax" class="font-semibold">$0.00</span>
+                    </div>
+                </div>
+                <div class="flex justify-between mb-6 pt-4 border-t border-gray-200">
+                    <span class="text-lg font-bold">Total</span>
+                    <span id="cart-total" class="text-lg font-bold">$0.00</span>
+                </div>
+                <button id="checkout-button" class="w-full bg-primary text-white py-3 rounded-button font-medium whitespace-nowrap mb-3" disabled>Checkout</button>
+                <button id="continue-shopping" class="w-full bg-white border border-gray-300 text-gray-800 py-3 rounded-button font-medium whitespace-nowrap">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <div class="back-to-top" id="back-to-top">
+        <i class="ri-arrow-up-line"></i>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="flex items-center">
+            <i class="ri-checkbox-circle-line mr-2"></i>
+            <span id="toast-message">Item added to your cart!</span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script id="hero-slider-script">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hero Slider
+            const sliderContainer = document.querySelector('.slider-container');
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slider-dot');
+            const prevBtn = document.querySelector('.slider-arrow.prev');
+            const nextBtn = document.querySelector('.slider-arrow.next');
+            let currentSlide = 0;
+            let slideInterval;
+
+            function goToSlide(index) {
+                if (index < 0) {
+                    index = slides.length - 1;
+                } else if (index >= slides.length) {
+                    index = 0;
+                }
+                
+                sliderContainer.style.transform = `translateX(-${index * 100}%)`;
+                
+                // Update active dot
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === index);
+                });
+                
+                currentSlide = index;
+            }
+
+            function startSlideInterval() {
+                slideInterval = setInterval(() => {
+                    goToSlide(currentSlide + 1);
+                }, 5000);
+            }
+            function resetSlideInterval() {
+                clearInterval(slideInterval);
+                startSlideInterval();
+            }
+
+            // Initialize slider
+            startSlideInterval();
+
+            // Event listeners
+            prevBtn.addEventListener('click', () => {
+                goToSlide(currentSlide - 1);
+                resetSlideInterval();
+            });
+
+            nextBtn.addEventListener('click', () => {
+                goToSlide(currentSlide + 1);
+                resetSlideInterval();
+            });
+
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    goToSlide(index);
+                    resetSlideInterval();
+                });
+            });
+        });
+    </script>
+
+    <script id="product-interaction-script">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Wishlist functionality
+            const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+            
+            wishlistBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    
+                    if (this.classList.contains('active')) {
+                        icon.classList.remove('ri-heart-line');
+                        icon.classList.add('ri-heart-fill');
+                        icon.style.color = '#ef4444';
+                        showToast('Item added to your wishlist!');
+                    } else {
+                        icon.classList.remove('ri-heart-fill');
+                        icon.classList.add('ri-heart-line');
+                        icon.style.color = '';
+                        showToast('Item removed from your wishlist!');
+                    }
+                });
+            });
+
+            // Quick view functionality
+            const quickViewBtns = document.querySelectorAll('.quick-view button');
+            const modal = document.getElementById('quick-view-modal');
+            const closeModal = document.querySelector('.close-modal');
+            
+            const productData = {
+                1: {
+                    title: 'Premium Wireless Headphones',
+                    description: 'Experience crystal-clear sound with our premium wireless headphones. Featuring active noise cancellation, 30-hour battery life, and ultra-comfortable ear cushions for all-day listening.',
+                    price: '$129.99',
+                    oldPrice: '$199.99',
+                    rating: '4.5 (128)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20premium%20white%20wireless%20noise-cancelling%20headphones%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=8&orientation=squarish'
+                },
+                2: {
+                    title: 'Smart Watch Series 5',
+                    description: 'Stay connected and track your fitness with our latest smartwatch. Features include heart rate monitoring, sleep tracking, GPS, and water resistance up to 50 meters.',
+                    price: '$249.99',
+                    oldPrice: '$299.99',
+                    rating: '4.0 (95)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20sleek%20modern%20smartwatch%20with%20black%20band%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=9&orientation=squarish'
+                },
+                3: {
+                    title: 'Genuine Leather Crossbody Bag',
+                    description: 'Handcrafted from premium genuine leather, this crossbody bag combines style and functionality. Features multiple compartments, adjustable strap, and secure zipper closure.',
+                    price: '$79.99',
+                    oldPrice: '$99.99',
+                    rating: '5.0 (42)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20leather%20crossbody%20bag%20in%20brown%20color%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=10&orientation=squarish'
+                },
+                4: {
+                    title: 'Minimalist Table Lamp',
+                    description: 'Add a touch of elegance to your home with this minimalist table lamp. Made from high-quality ceramic and wood, it provides warm, ambient lighting perfect for any room.',
+                    price: '$59.99',
+                    oldPrice: '$79.99',
+                    rating: '4.5 (78)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20minimalist%20white%20ceramic%20table%20lamp%20with%20wooden%20base%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=11&orientation=squarish'
+                },
+                5: {
+                    title: 'Athletic Running Shoes',
+                    description: 'Designed for comfort and performance, these lightweight running shoes feature breathable mesh upper, responsive cushioning, and durable rubber outsole for optimal traction.',
+                    price: '$89.99',
+                    oldPrice: '$119.99',
+                    rating: '4.0 (112)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20pair%20of%20white%20and%20blue%20athletic%20sneakers%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=12&orientation=squarish'
+                },
+                6: {
+                    title: 'Insulated Water Bottle',
+                    description: 'Keep your beverages hot or cold for hours with this premium stainless steel water bottle. Features double-wall vacuum insulation, leak-proof cap, and durable powder-coated finish.',
+                    price: '$24.99',
+                    oldPrice: '$34.99',
+                    rating: '4.7 (89)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20sleek%20stainless%20steel%20water%20bottle%20in%20matte%20black%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=13&orientation=squarish'
+                },
+                7: {
+                    title: 'Classic Denim Jacket',
+                    description: 'A timeless wardrobe essential, this vintage wash denim jacket features a comfortable fit, button-up front, and multiple pockets. Perfect for layering in any season.',
+                    price: '$69.99',
+                    oldPrice: '$89.99',
+                    rating: '4.2 (65)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20denim%20jacket%20in%20light%20blue%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=14&orientation=squarish'
+                },
+                8: {
+                    title: 'Luxury Scented Candles',
+                    description: 'Transform your space with our set of three luxury scented candles. Made from natural soy wax with premium essential oils for a clean, long-lasting burn.',
+                    price: '$39.99',
+                    oldPrice: '$49.99',
+                    rating: '5.0 (37)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20set%20of%20scented%20candles%20in%20glass%20jars%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=15&orientation=squarish'
+                },
+                9: {
+                    title: 'Wireless Earbuds Pro',
+                    description: 'Immerse yourself in sound with our wireless earbuds featuring active noise cancellation, touch controls, and up to 24 hours of battery life with the charging case.',
+                    price: '$149.99',
+                    oldPrice: '$179.99',
+                    rating: '4.6 (52)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20modern%20wireless%20earbuds%20with%20charging%20case%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=16&orientation=squarish'
+                },
+                10: {
+                    title: 'Premium Leather Wallet',
+                    description: 'Crafted from genuine leather, this RFID-blocking wallet features multiple card slots, bill compartments, and a sleek design that fits comfortably in your pocket.',
+                    price: '$49.99',
+                    oldPrice: '$69.99',
+                    rating: '4.9 (215)',
+                    image: 'https://readdy.ai/api/search-image?query=professional%20product%20photography%20of%20a%20stylish%20leather%20wallet%20in%20brown%20on%20a%20clean%20white%20background%20with%20soft%20shadows%2C%20high-quality%20detailed%20product%20shot&width=300&height=300&seq=17&orientation=squarish'
+                }
+            };
+            
+            quickViewBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const productId = this.getAttribute('data-product-id');
+                    const product = productData[productId];
+                    
+                    // Populate modal with product data
+                    document.getElementById('modal-product-title').textContent = product.title;
+                    document.getElementById('modal-product-description').textContent = product.description;
+                    document.getElementById('modal-product-price').textContent = product.price;
+                    document.getElementById('modal-product-old-price').textContent = product.oldPrice;
+                    document.getElementById('modal-product-rating').textContent = product.rating;
+                    document.getElementById('modal-product-image').src = product.image;
+                    
+                    // Show modal
+                    modal.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+            
+            closeModal.addEventListener('click', function() {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            window.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Quantity selector in modal
+            const minusBtn = document.querySelector('.quantity-btn.minus');
+            const plusBtn = document.querySelector('.quantity-btn.plus');
+            const quantityInput = document.querySelector('.quantity-input');
+            
+            minusBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value > 1) {
+                    quantityInput.value = value - 1;
+                }
+            });
+            
+            plusBtn.addEventListener('click', function() {
+                let value = parseInt(quantityInput.value);
+                if (value < 10) {
+                    quantityInput.value = value + 1;
+                }
+            });
+            
+            // Add to cart functionality
+            const addToCartBtns = document.querySelectorAll('.add-to-cart-btn');
+            let cartCount = 0;
+            const cartCounter = document.getElementById('cart-counter');
+            const cartCountSpan = document.getElementById('cart-count');
+            
+            addToCartBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const productId = this.getAttribute('data-product-id');
+                    const product = productData[productId];
+                    
+                    // Animation
+                    const btnRect = this.getBoundingClientRect();
+                    const cartIconRect = document.getElementById('cart-icon').getBoundingClientRect();
+                    
+                    const animationEl = document.createElement('div');
+                    animationEl.classList.add('add-to-cart-animation');
+                    animationEl.style.top = `${btnRect.top + btnRect.height/2}px`;
+                    animationEl.style.left = `${btnRect.left + btnRect.width/2}px`;
+                    document.body.appendChild(animationEl);
+                    
+                    // Animate to cart
+                    setTimeout(() => {
+                        animationEl.style.top = `${cartIconRect.top + cartIconRect.height/2}px`;
+                        animationEl.style.left = `${cartIconRect.left + cartIconRect.width/2}px`;
+                        animationEl.style.opacity = '0.5';
+                        animationEl.style.transform = 'scale(0.5)';
+                        animationEl.style.transition = 'all 0.5s ease-in-out';
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(animationEl);
+                            
+                            // Update cart count
+                            cartCount++;
+                            cartCounter.textContent = cartCount;
+                            cartCountSpan.textContent = cartCount;
+                            
+                            // Add to cart
+                            addToCart(product, 1);
+                            
+                            // Show toast
+                            showToast('Item added to your cart!');
+                            
+                            // Enable checkout button if cart has items
+                            document.getElementById('checkout-button').disabled = false;
+                            
+                            // Hide empty cart message if visible
+                            document.getElementById('empty-cart-message').style.display = 'none';
+                        }, 500);
+                    }, 10);
+                });
+            });
+            
+            // Toast notification
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                const toastMessage = document.getElementById('toast-message');
+                
+                toastMessage.textContent = message;
+                toast.classList.add('show');
+                
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Cart functionality
+            const cartItems = [];
+            let subtotal = 0;
+            const shipping = 10;
+            const taxRate = 0.08;
+            
+            function addToCart(product, quantity) {
+                // Check if product already in cart
+                const existingItem = cartItems.find(item => item.title === product.title);
+                
+                if (existingItem) {
+                    existingItem.quantity += quantity;
+                } else {
+                    cartItems.push({
+                        ...product,
+                        quantity: quantity
+                    });
+                }
+                
+                updateCart();
+            }
+            
+            function updateCart() {
+                const cartItemsContainer = document.getElementById('cart-items');
+                const emptyCartMessage = document.getElementById('empty-cart-message');
+                
+                // Clear current items
+                while (cartItemsContainer.firstChild && cartItemsContainer.firstChild !== emptyCartMessage) {
+                    cartItemsContainer.removeChild(cartItemsContainer.firstChild);
+                }
+                
+                // Hide/show empty cart message
+                if (cartItems.length === 0) {
+                    emptyCartMessage.style.display = 'flex';
+                } else {
+                    emptyCartMessage.style.display = 'none';
+                    
+                    // Add items to cart
+                    subtotal = 0;
+                    
+                    cartItems.forEach((item, index) => {
+                        const price = parseFloat(item.price.replace('$', ''));
+                        const itemTotal = price * item.quantity;
+                        subtotal += itemTotal;
+                        
+                        const cartItemEl = document.createElement('div');
+                        cartItemEl.className = 'flex items-start border-b border-gray-200 pb-4 mb-4';
+                        cartItemEl.innerHTML = `
+                            <div class="w-20 h-20 rounded-lg overflow-hidden mr-4">
+                                <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-semibold text-sm">${item.title}</h4>
+                                <div class="flex items-center mt-1 mb-2">
+                                    <span class="text-primary font-medium">${item.price}</span>
+                                    <span class="text-gray-400 text-sm ml-2">x ${item.quantity}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <button class="cart-item-decrease w-6 h-6 flex items-center justify-center border border-gray-200 rounded-full text-gray-500" data-index="${index}">-</button>
+                                    <span class="mx-2">${item.quantity}</span>
+                                    <button class="cart-item-increase w-6 h-6 flex items-center justify-center border border-gray-200 rounded-full text-gray-500" data-index="${index}">+</button>
+                                </div>
+                            </div>
+                            <button class="cart-item-remove w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500" data-index="${index}">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        `;
+                        
+                        cartItemsContainer.appendChild(cartItemEl);
+                    });
+                    
+                    // Add event listeners to cart item buttons
+                    document.querySelectorAll('.cart-item-decrease').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            if (cartItems[index].quantity > 1) {
+                                cartItems[index].quantity--;
+                                updateCart();
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.cart-item-increase').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            cartItems[index].quantity++;
+                            updateCart();
+                        });
+                    });
+                    
+                    document.querySelectorAll('.cart-item-remove').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const index = parseInt(this.getAttribute('data-index'));
+                            cartItems.splice(index, 1);
+                            cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+                            cartCounter.textContent = cartCount;
+                            cartCountSpan.textContent = cartCount;
+                            updateCart();
+                            
+                            // Disable checkout button if cart is empty
+                            if (cartItems.length === 0) {
+                                document.getElementById('checkout-button').disabled = true;
+                            }
+                        });
+                    });
+                }
+                
+                // Update cart totals
+                const tax = subtotal * taxRate;
+                const total = subtotal + shipping + tax;
+                
+                document.getElementById('cart-subtotal').textContent = `$${subtotal.toFixed(2)}`;
+                document.getElementById('cart-shipping').textContent = `$${shipping.toFixed(2)}`;
+                document.getElementById('cart-tax').textContent = `$${tax.toFixed(2)}`;
+                document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+            }
+            
+            // Cart sidebar toggle
+            const cartIcon = document.getElementById('cart-icon');
+            const cartSidebar = document.getElementById('cart-sidebar');
+            const cartBackdrop = document.getElementById('cart-sidebar-backdrop');
+            const closeCart = document.getElementById('close-cart');
+            const continueShoppingBtn = document.getElementById('continue-shopping');
+            const startShoppingBtn = document.getElementById('start-shopping');
+            
+            function openCart() {
+                cartSidebar.style.transform = 'translateX(0)';
+                cartBackdrop.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeCartSidebar() {
+                cartSidebar.style.transform = 'translateX(100%)';
+                cartBackdrop.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            
+            cartIcon.addEventListener('click', openCart);
+            closeCart.addEventListener('click', closeCartSidebar);
+            cartBackdrop.addEventListener('click', closeCartSidebar);
+            continueShoppingBtn.addEventListener('click', closeCartSidebar);
+            startShoppingBtn.addEventListener('click', closeCartSidebar);
+            
+            // Filter sidebar toggle
+            const filterBtn = document.querySelector('button:has(.ri-filter-3-line)');
+            const filterSidebar = document.getElementById('filter-sidebar');
+            const filterBackdrop = document.getElementById('filter-sidebar-backdrop');
+            const closeFilter = document.getElementById('close-filter');
+            
+            if (filterBtn) {
+                filterBtn.addEventListener('click', function() {
+                    filterSidebar.style.transform = 'translateX(0)';
+                    filterBackdrop.style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                });
+            }
+            
+            closeFilter.addEventListener('click', function() {
+                filterSidebar.style.transform = 'translateX(-100%)';
+                filterBackdrop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            filterBackdrop.addEventListener('click', function() {
+                filterSidebar.style.transform = 'translateX(-100%)';
+                filterBackdrop.style.display = 'none';
+                document.body.style.overflow = '';
+            });
+            
+            // Price range slider
+            const priceRange = document.getElementById('price-range');
+            const maxPrice = document.getElementById('max-price');
+            
+            priceRange.addEventListener('input', function() {
+                maxPrice.textContent = `$${this.value}`;
+            });
+            
+            // Sort dropdown
+            const sortButton = document.getElementById('sort-button');
+            const sortDropdown = document.getElementById('sort-dropdown');
+            
+            if (sortButton) {
+                sortButton.addEventListener('click', function() {
+                    sortDropdown.classList.toggle('hidden');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!sortButton.contains(e.target) && !sortDropdown.contains(e.target)) {
+                        sortDropdown.classList.add('hidden');
+                    }
+                });
+                
+                const sortOptions = sortDropdown.querySelectorAll('a');
+                sortOptions.forEach(option => {
+                    option.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        sortButton.querySelector('span').textContent = `Sort By: ${this.textContent}`;
+                        sortDropdown.classList.add('hidden');
+                    });
+                });
+            }
+        });
+    </script>
+
+    <script id="ui-interaction-script">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Back to top button
+            const backToTopBtn = document.getElementById('back-to-top');
+            
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            });
+            
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+            
+            // Product tabs
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to current tab and content
+                    this.classList.add('active');
+                    document.getElementById(`${tabId}-content`).classList.add('active');
+                });
+            });
+            
+            // Newsletter form
+            const newsletterForm = document.getElementById('newsletter-form');
+            const newsletterMessage = document.getElementById('newsletter-message');
+            
+            if (newsletterForm) {
+                newsletterForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const email = this.querySelector('input[type="email"]').value;
+                    
+                    // Simple validation
+                    if (email && email.includes('@') && email.includes('.')) {
+                        newsletterMessage.textContent = 'Thank you for subscribing to our newsletter!';
+                        newsletterMessage.classList.add('text-green-500');
+                        newsletterMessage.classList.remove('text-red-500', 'hidden');
+                        this.reset();
+                    } else {
+                        newsletterMessage.textContent = 'Please enter a valid email address.';
+                        newsletterMessage.classList.add('text-red-500');
+                        newsletterMessage.classList.remove('text-green-500', 'hidden');
+                    }
+                    
+                    // Hide message after 3 seconds
+                    setTimeout(() => {
+                        newsletterMessage.classList.add('hidden');
+                    }, 3000);
+                });
+            }
+            
+            // Countdown timer
+            function updateCountdown() {
+                const now = new Date();
+                const endDate = new Date();
+                endDate.setDate(now.getDate() + 2); // 2 days from now
+                endDate.setHours(now.getHours() + 8); // 8 hours from now
+                endDate.setMinutes(now.getMinutes() + 45); // 45 minutes from now
+                
+                const diff = endDate - now;
+                
+                if (diff <= 0) {
+                    // Sale ended
+                    document.getElementById('days').textContent = '00';
+                    document.getElementById('hours').textContent = '00';
+                    document.getElementById('minutes').textContent = '00';
+                    document.getElementById('seconds').textContent = '00';
+                    return;
+                }
+                
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            }
+            
+            // Update countdown every second
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        });
+    </script>
+</body>
+</html>
